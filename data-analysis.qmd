@@ -1,0 +1,26 @@
+---
+title: "data-analysis"
+format: html
+---
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+stefano = read_csv("./data/croatian-lexdes.csv")
+original1 = read_tsv("./data/megahr.tsv")
+original2 = read_tsv("./data/megahr.2nd.tsv")
+```
+
+```{r}
+original <- rbind(original1, original2)
+```
+
+```{r}
+unique(original$vrsta.riječi)
+count(original, vrsta.riječi)
+```
+
+Rename columns to understandable English names
+Count word types and rename
