@@ -1,0 +1,117 @@
+---
+title: "imageability-regression"
+format: html
+---
+
+```{r}
+library(tidyverse)
+library(brms)
+library(bayesplot)
+library(ggdist)
+library(posterior)
+```
+
+## Density Plot
+
+```{r}
+original |> 
+  ggplot(aes(imageability_mean, fill = word_class)) +
+  geom_density(alpha = 0.5)
+```
+
+## Violin Plot
+
+```{r}
+original |>
+  ggplot(aes(word_class, imageability_mean, fill = word_class)) +
+  geom_jitter(alpha = 0.15, width = 0.1) +
+  geom_violin(width = 0.2) +
+  scale_fill_brewer(palette = "Dark2")
+```
+
+## Summary
+
+```{r}
+original_summ <- original |> 
+  group_by(word_class) |> 
+  summarise(
+    mean(imageability_mean), median(imageability_mean), sd(imageability_mean)
+  )
+
+original_summ
+```
+
+## Model
+
+```{r}
+img_bm <- brm(
+  imageability_mean ~ word_class,
+  family = gaussian,
+  data = original,
+  seed = 6725,
+  file = "cache_img_bm"
+)
+```
+
+```{r}
+summary(img_bm)
+```
+
+## Results
+
+```{r}
+mcmc_dens(img_bm, pars = vars(starts_with("b_")))
+```
+
+
+```{r}
+img_bm_draws <- as_draws_df(img_bm) |> 
+  mutate(
+    adj = b_Intercept,
+    adv = b_Intercept + b_word_classadv,
+    noun = b_Intercept + b_word_classnoun,
+    verb = b_Intercept + b_word_classverb
+  )
+
+img_bm_long <- img_bm_draws |> 
+  select(adj:verb) |> 
+  pivot_longer(everything(), names_to = "word_class", values_to = "pred")
+
+img_bm_long
+```
+
+## Table 1
+```{r}
+img_bm_tab <- img_bm_long |> 
+  group_by(word_class) |> 
+  summarise(
+    mean = mean(pred), sd = sd(pred),
+    `99%` = paste0("[", paste(quantile2(pred, c(0.005, 0.995)) |> round(2), collapse = ", "), "]"),
+    `95%` = paste0("[", paste(quantile2(pred, c(0.025, 0.975)) |> round(2), collapse = ", "), "]"),
+    `75%` = paste0("[", paste(quantile2(pred, c(0.125, 0.875)) |> round(2), collapse = ", "), "]")
+  )
+
+img_bm_tab
+```
+
+```{r}
+img_bm_tab |> 
+  knitr::kable(
+    col.names = c("", "Mean", "SD", "99% CrI", "95% CrI", "60% CrI"),
+    digits = 1, align = c("rcccc")
+  )
+```
+
+## Reporting
+
+We fitted a Bayesian regression model to the mean imageability score of Croatian words. We used a Gaussian distribution for the outcome and word class (adjective, adverb, noun, verb) as the only predictor. Word class was coded using the default treatment coding.
+
+According to the model, the mean imageability score of adjectives is between 3.33 and 3.40, of adverbs is between 3.01 and 3.18, of nouns is between 3.82 and 3.87, and of verbs is between 3.54 and 3.62, at 95% probability.
+
+Table 1 reports mean, SD, and 99% and 75% CrIs.
+
+When comparing adverbs, nouns, and verbs to adjectives, at 95% confidence, the mean imageability score of adverbs is 0.18 to 0.37 points lower than that of adjectives (mean = 0.28, SD = 0.05), while the mean imageability score of nouns is 0.43 to 0.52 points higher than that of adjectives (mean = 0.48, SD = 0.02), and the mean imageability score of verbs is 0.16 to 0.26 points higher than that of adjectives (mean = 0.21, SD = 0.03)
+
+## Comparison to Original Study
+
+The findings from this Bayesian analysis were similar to the findings from a frequentist analysis of the same data in Peti-Stantić et al. (2021). As in the original study, we found evidence that mean imageability score is highest for nouns, followed by verbs, then adjectives, then adverbs. As the 99% credible intervals for mean imageability score do not overlap, the posteriors suggest differences between word classes.
