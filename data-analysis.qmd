@@ -21,6 +21,40 @@ original <- rbind(original1, original2)
 unique(original$vrsta.riječi)
 count(original, vrsta.riječi)
 ```
+#Drop unnecessary data
+```{r}
+original <- original[-c(7:20,49:62)] #remove unneccessary types
+original <- original[-c(7,9:21,23:34)] #remove all but the mean for clarity
+```
 
-Rename columns to understandable English names
-Count word types and rename
+#Rename columns to understandable English names
+```{r}
+original <- original|>
+  rename(
+    token = 'leksem',
+    word_class = 'vrsta.riječi',
+    gender = 'rod',
+    animacy = 'živost',
+    number_of_letters = 'broj.slova',
+    freq = 'frek'
+         )
+
+original <- original|>
+  rename(
+    subjective_frequency_mean = 'č.M',
+    imageability_mean = 'p.M'
+  )
+
+```
+
+#Rename Word Classes
+```{r}
+original <- original|>
+  mutate(word_class = case_when(
+    word_class == "Nc" ~ "noun",
+    word_class == "Vm" ~ "verb",
+    word_class == "Ag" ~ "adj",
+    word_class == "Rg" ~ "adv"
+  ))
+```
+

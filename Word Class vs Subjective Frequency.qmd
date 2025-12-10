@@ -20,3 +20,6 @@ library(posterior)
 ```
 
 #Summarize Relevant Data
+```{r}
+
+```
