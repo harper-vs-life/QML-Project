@@ -1,0 +1,25 @@
+---
+title: "Word Class vs Subjective Frequency"
+format: html
+---
+
+#Attach Necessary Packages
+```{r}
+library(tidyverse)
+library(brms)
+library(bayesplot)
+library(ggdist)
+library(posterior)
+
+```
+
+
+#Load the Data
+```{r}
+
+```
+
+#Summarize Relevant Data
+```{r}
+
+```
