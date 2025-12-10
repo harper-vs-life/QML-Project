@@ -21,6 +21,7 @@ original <- rbind(original1, original2)
 unique(original$vrsta.riječi)
 count(original, vrsta.riječi)
 ```
+
 #Drop unnecessary data
 ```{r}
 original <- original[-c(7:20,49:62)] #remove unneccessary types

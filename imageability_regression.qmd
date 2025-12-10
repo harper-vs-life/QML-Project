@@ -49,7 +49,7 @@ img_bm <- brm(
   family = gaussian,
   data = original,
   seed = 6725,
-  file = "cache_img_bm"
+  file = "cache/img_bm"
 )
 ```
 
