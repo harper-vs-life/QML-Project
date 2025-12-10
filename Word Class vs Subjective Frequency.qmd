@@ -13,13 +13,97 @@ library(posterior)
 
 ```
 
-
-#Load the Data
+#Plotting the types
 ```{r}
-
+original |> 
+  drop_na(word_class) |> 
+  ggplot(aes(subjective_frequency_mean, fill = word_class)) +
+  geom_density(alpha = 0.5)
 ```
 
-#Summarize Relevant Data
-```{r}
 
+#Examining the Data Structure
+```{r}
+original |>
+  ggplot(aes(word_class, subjective_frequency_mean, fill = word_class)) +
+  geom_jitter(alpha = 0.15, width = 0.1) +
+  geom_violin(width = 0.2) +
+  scale_fill_brewer(palette = "Dark2")
 ```
+
+#Summarising the Data by Word Class
+```{r}
+original_summ <- original |> 
+  group_by(word_class) |> 
+  summarise(
+    mean(subjective_frequency_mean)
+  ) 
+
+original_summ
+```
+
+
+#Creating a Regression Model of the Data
+```{r}
+subj_freq_bm <- brm(
+  subjective_frequency_mean ~ word_class,
+  family = gaussian,
+  data = original,
+  seed = 6725,
+  file = "cache/subj_freq_bm"
+)
+```
+
+
+#Show Results of Model
+```{r}
+summary(subj_freq_bm)
+```
+
+
+#Mutate the Draws
+```{r}
+subj_freq_bm_draws <- as_draws_df(subj_freq_bm) |> 
+  mutate(
+    adj = b_Intercept,
+    adv = b_Intercept + b_word_classadv,
+    noun = b_Intercept + b_word_classnoun,
+    verb = b_Intercept + b_word_classverb
+  )
+```
+
+
+#Table Summarization
+```{r}
+subj_freq_bm_long <- subj_freq_bm_draws |> 
+  select(adj:verb) |> 
+  pivot_longer(everything(), names_to = "word_class", values_to = "pred")
+
+subj_freq_bm_tab <- subj_freq_bm_long |> 
+  group_by(word_class) |> 
+  summarise(
+    mean = mean(pred), sd = sd(pred),
+    `99%` = paste0("[", paste(quantile2(pred, c(0.005, 0.995)) |> round(2), collapse = ", "), "]"),
+    `95%` = paste0("[", paste(quantile2(pred, c(0.025, 0.975)) |> round(2), collapse = ", "), "]"),
+    `75%` = paste0("[", paste(quantile2(pred, c(0.125, 0.875)) |> round(2), collapse = ", "), "]")
+  )
+
+subj_freq_bm_tab
+```
+
+
+#Nicer Table
+```{r}
+subj_freq_bm_tab |> 
+  knitr::kable(
+    col.names = c("", "Mean", "SD", "99% CrI", "95% CrI", "75% CrI"),
+    digits = 2, align = c("rccccc")
+  )
+```
+
+#Reporting
+We fitted a Bayesian regression model to Mean Subjective Frequency (MSF) of Croatian words, measured on a Likert scale between 1 and 5. We used a Gaussian distribution for the outcome and word class (adjective, adverb, noun, verb) as the only predictor. Word class was treated as a default factored input.
+
+According to the model, the mean MSF of adjectives is between 3.14 and 3.22, of adverbs is between 3.82 and 4.00, of nouns is between 3.21 and 3.27, and of verbs is between 3.42 and 3.49, at 95% probability. The table above reports mean, SD, 99%, 95% and 75% CrIs. When comparing the word classes at 95% confidence, adverbs were rated 0.64-0.83 more frequently used (mean = 3.91, SD = 0.05) than adjectives (mean = 3.18, SD = 0.02). Additionally, nouns were rated 0.02-0.11 more frequently used (mean = 3.24, SD = 0.02) and verbs were rated 0.22-0.33 more frequently used (mean = 3.46, SD = 0.03) than adjectives.
+
+Compared to Peti-Stantić et al. (2021), we found evidence of similar trends in the mean of subjective frequency, with there being a large difference in the means of adverbs and verbs as compared to the mean of adjectives. However, in contrast to the study, which found there to be no 'significant' difference in the means in subjective frequency of nouns and adjectives, we can conclude with 95% confidence that there is a small but positive difference in the mean of nouns as compared to adjectives.
