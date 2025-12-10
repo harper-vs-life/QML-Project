@@ -179,7 +179,7 @@ The findings from this Bayesian analysis were similar to the findings from a fre
 
 # Effect of Word Class on Subjective Frequency
 
-##Plotting the Types
+## Plotting the Types
 ```{r}
 original |> 
   drop_na(word_class) |> 
@@ -188,7 +188,7 @@ original |>
 ```
 
 
-##Examining the Data Structure
+## Examining the Data Structure
 ```{r}
 original |>
   ggplot(aes(word_class, subjective_frequency_mean, fill = word_class)) +
@@ -197,7 +197,7 @@ original |>
   scale_fill_brewer(palette = "Dark2")
 ```
 
-##Summarising the Data by Word Class
+## Summarising the Data by Word Class
 ```{r}
 original_summ <- original |> 
   group_by(word_class) |> 
@@ -209,7 +209,7 @@ original_summ
 ```
 
 
-##Creating a Regression Model of the Data
+## Creating a Regression Model of the Data
 ```{r}
 subj_freq_bm <- brm(
   subjective_frequency_mean ~ word_class,
@@ -221,13 +221,13 @@ subj_freq_bm <- brm(
 ```
 
 
-##Show Results of Model
+## Show Results of Model
 ```{r}
 summary(subj_freq_bm)
 ```
 
 
-##Mutate the Draws
+## Mutate the Draws
 ```{r}
 subj_freq_bm_draws <- as_draws_df(subj_freq_bm) |> 
   mutate(
@@ -239,7 +239,7 @@ subj_freq_bm_draws <- as_draws_df(subj_freq_bm) |>
 ```
 
 
-##Table Summarization
+## Table Summarization
 ```{r}
 subj_freq_bm_long <- subj_freq_bm_draws |> 
   select(adj:verb) |> 
@@ -258,7 +258,7 @@ subj_freq_bm_tab
 ```
 
 
-##Nicer Table
+## Nicer Table
 ```{r}
 subj_freq_bm_tab |> 
   knitr::kable(
@@ -267,7 +267,7 @@ subj_freq_bm_tab |>
   )
 ```
 
-##Reporting
+## Reporting
 We fitted a Bayesian regression model to Mean Subjective Frequency (MSF) of Croatian words, measured on a Likert scale between 1 and 5. We used a Gaussian distribution for the outcome and word class (adjective, adverb, noun, verb) as the only predictor. Word class was treated as a default factored input.
 
 According to the model, the mean MSF of adjectives is between 3.14 and 3.22, of adverbs is between 3.82 and 4.00, of nouns is between 3.21 and 3.27, and of verbs is between 3.42 and 3.49, at 95% probability. The table above reports mean, SD, 99%, 95% and 75% CrIs. When comparing the word classes at 95% confidence, adverbs were rated 0.64-0.83 more frequently used (mean = 3.91, SD = 0.05) than adjectives (mean = 3.18, SD = 0.02). Additionally, nouns were rated 0.02-0.11 more frequently used (mean = 3.24, SD = 0.02) and verbs were rated 0.22-0.33 more frequently used (mean = 3.46, SD = 0.03) than adjectives.
