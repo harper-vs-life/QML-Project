@@ -58,3 +58,8 @@ original <- original|>
   ))
 ```
 
+#Refactoring Word Class
+```{r}
+original <- original|>
+  mutate(word_class = as.factor(word_class))
+```
